@@ -17,15 +17,15 @@ Idx Name          Size      VMA       LMA       File off  Algn
                   CONTENTS, READONLY, DEBUGGING
   6 .debug_abbrev 00000aaf  00000000  00000000  00001987  2**0
                   CONTENTS, READONLY, DEBUGGING
-  7 .debug_line   00000630  00000000  00000000  00002436  2**0
+  7 .debug_line   0000062b  00000000  00000000  00002436  2**0
                   CONTENTS, READONLY, DEBUGGING
-  8 .debug_frame  000000d0  00000000  00000000  00002a68  2**2
+  8 .debug_frame  000000d0  00000000  00000000  00002a64  2**2
                   CONTENTS, READONLY, DEBUGGING
-  9 .debug_str    00000523  00000000  00000000  00002b38  2**0
+  9 .debug_str    00000531  00000000  00000000  00002b34  2**0
                   CONTENTS, READONLY, DEBUGGING
- 10 .debug_loc    00000911  00000000  00000000  0000305b  2**0
+ 10 .debug_loc    00000911  00000000  00000000  00003065  2**0
                   CONTENTS, READONLY, DEBUGGING
- 11 .debug_ranges 00000068  00000000  00000000  0000396c  2**0
+ 11 .debug_ranges 00000068  00000000  00000000  00003976  2**0
                   CONTENTS, READONLY, DEBUGGING
 
 Disassembly of section .text:
@@ -93,7 +93,7 @@ Disassembly of section .text:
 000000cc <__vector_27>:
 void LCD_cmd(unsigned char cmd);
 void LCD_write(unsigned char data);
-void Cursor_pos(unsigned char x_pos, unsigned char y_pos);
+void Cursor_pos(unsigned char x_pos, unsigned char y_pos);            // x_pos:0~1 , y:0~15 cursor position in rows and columns
                                        //ISR//
 ISR(PCINT3_vect)
 {
@@ -109,7 +109,7 @@ ISR(PCINT3_vect)
   dc:	4f 9b       	sbis	0x09, 7	; 9
   de:	0c c0       	rjmp	.+24     	; 0xf8 <__vector_27+0x2c>
 	{
-		PIND |= (1 << PIND0);
+		PIND |= (1 << PIND0);            // 3l4an lw galy interrupt signal ON pin number 0 fe port D w OFF every 200 milisecond
   e0:	48 9a       	sbi	0x09, 0	; 9
 	#else
 		//round up by default
@@ -127,7 +127,7 @@ ISR(PCINT3_vect)
   f0:	00 c0       	rjmp	.+0      	; 0xf2 <__vector_27+0x26>
   f2:	00 00       	nop
 void LCD_write(unsigned char data);
-void Cursor_pos(unsigned char x_pos, unsigned char y_pos);
+void Cursor_pos(unsigned char x_pos, unsigned char y_pos);            // x_pos:0~1 , y:0~15 cursor position in rows and columns
                                        //ISR//
 ISR(PCINT3_vect)
 {
@@ -135,8 +135,8 @@ ISR(PCINT3_vect)
   f4:	4f 99       	sbic	0x09, 7	; 9
   f6:	f4 cf       	rjmp	.-24     	; 0xe0 <__vector_27+0x14>
 	{
-		PIND |= (1 << PIND0);
-		_delay_ms(200);
+		PIND |= (1 << PIND0);            // 3l4an lw galy interrupt signal ON pin number 0 fe port D w OFF every 200 milisecond
+		_delay_ms(200);                   // delay every 100 milisecond 
 	}
 }						
   f8:	9f 91       	pop	r25
@@ -149,7 +149,7 @@ ISR(PCINT3_vect)
  106:	18 95       	reti
 
 00000108 <init_ADC>:
-                                       //ADC//
+                                      //ADC for initialization//
 void init_ADC(void)
 {
 	ADCSRA |= ((1<<ADPS2)|(1<<ADPS1)|(1<<ADPS0));
@@ -158,7 +158,7 @@ void init_ADC(void)
  10c:	80 81       	ld	r24, Z
  10e:	87 60       	ori	r24, 0x07	; 7
  110:	80 83       	st	Z, r24
-	ADMUX  |= (1<<REFS0);								   			   
+	ADMUX  |= (1<<REFS0);		                    // go to registers to enable some pins						   			   
  112:	ac e7       	ldi	r26, 0x7C	; 124
  114:	b0 e0       	ldi	r27, 0x00	; 0
  116:	8c 91       	ld	r24, X
@@ -168,6 +168,7 @@ void init_ADC(void)
  11c:	80 81       	ld	r24, Z
  11e:	80 68       	ori	r24, 0x80	; 128
  120:	80 83       	st	Z, r24
+	// do an initial conversion because this one is the slowest and to ensure that everything is up and running
 	ADCSRA |= (1<<ADSC);
  122:	80 81       	ld	r24, Z
  124:	80 64       	ori	r24, 0x40	; 64
@@ -177,30 +178,30 @@ void init_ADC(void)
 0000012a <ADC_read>:
 }
 
-                                    //ADC read//
+                                    //ADC for reading al channel// 
 uint16_t ADC_read(uint16_t channel)
 {
-	ADMUX &= 0xF0;
+	ADMUX &= 0xF0;                    // to clear the older channel that was read
  12a:	ec e7       	ldi	r30, 0x7C	; 124
  12c:	f0 e0       	ldi	r31, 0x00	; 0
  12e:	90 81       	ld	r25, Z
  130:	90 7f       	andi	r25, 0xF0	; 240
  132:	90 83       	st	Z, r25
-	ADMUX |= channel;
+	ADMUX |= channel;                   //  3l4an ydefine the new ADC channel to be read
  134:	90 81       	ld	r25, Z
  136:	89 2b       	or	r24, r25
  138:	80 83       	st	Z, r24
-	ADCSRA |= (1<<ADSC);
+	ADCSRA |= (1<<ADSC);                 // to start a new conversion ( signal conversion )
  13a:	ea e7       	ldi	r30, 0x7A	; 122
  13c:	f0 e0       	ldi	r31, 0x00	; 0
  13e:	80 81       	ld	r24, Z
  140:	80 64       	ori	r24, 0x40	; 64
  142:	80 83       	st	Z, r24
-	while(ADCSRA & (1<<ADSC));
+	while(ADCSRA & (1<<ADSC));            // wait until the conversion is done
  144:	80 81       	ld	r24, Z
  146:	86 fd       	sbrc	r24, 6
  148:	fd cf       	rjmp	.-6      	; 0x144 <ADC_read+0x1a>
-	return ADC;
+	return ADC;                            // returns the ADC value of the chossen channel
  14a:	80 91 78 00 	lds	r24, 0x0078	; 0x800078 <__TEXT_REGION_LENGTH__+0x7e0078>
  14e:	90 91 79 00 	lds	r25, 0x0079	; 0x800079 <__TEXT_REGION_LENGTH__+0x7e0079>
 }
@@ -225,18 +226,18 @@ void PWM_Init(void)
  168:	08 95       	ret
 
 0000016a <LCD_cmd>:
-	LCD_cmd(0x80);
-	_delay_ms(1);
-}
+// al function de 3l4an ab3t al command//
+
+// sending command on LCD ( En = enable , Rs = Reset , Rw = write //
 void LCD_cmd(unsigned char cmd)		
 {
-	LCD_DATA = cmd;
+	LCD_DATA = cmd;                 // Data lines are set to send command - PORTB = LCD_DATA
  16a:	85 b9       	out	0x05, r24	; 5
-	PORTE &= ~(1<<rs);
+	PORTE &= ~(1<<rs);                  // Rs sets 0
  16c:	73 98       	cbi	0x0e, 3	; 14
-	PORTE &= ~(1<<rw);
+	PORTE &= ~(1<<rw);                  // Rw sets 0
  16e:	72 98       	cbi	0x0e, 2	; 14
-	PORTE |= (1<<en);
+	PORTE |= (1<<en);                   // make enable high
  170:	71 9a       	sbi	0x0e, 1	; 14
  172:	8f e3       	ldi	r24, 0x3F	; 63
  174:	9f e1       	ldi	r25, 0x1F	; 31
@@ -245,7 +246,7 @@ void LCD_cmd(unsigned char cmd)
  17a:	00 c0       	rjmp	.+0      	; 0x17c <LCD_cmd+0x12>
  17c:	00 00       	nop
 	_delay_ms(2);
-	PORTE &= ~(1<<en);
+	PORTE &= ~(1<<en);                 // make enable from high to low
  17e:	71 98       	cbi	0x0e, 1	; 14
  180:	08 95       	ret
 
@@ -255,7 +256,7 @@ void LCD_cmd(unsigned char cmd)
                                    //LCD init//								   
 void init_LCD(void)								   
 {
-	LCD_cmd(0x38);								   
+	LCD_cmd(0x38);			          // init of 16 by 2 LCD in 8 bit  mode ( 16x2 )					   
  182:	88 e3       	ldi	r24, 0x38	; 56
  184:	0e 94 b5 00 	call	0x16a	; 0x16a <LCD_cmd>
  188:	8f e9       	ldi	r24, 0x9F	; 159
@@ -265,7 +266,7 @@ void init_LCD(void)
  190:	00 c0       	rjmp	.+0      	; 0x192 <init_LCD+0x10>
  192:	00 00       	nop
 	_delay_ms(1);							   
-	LCD_cmd(0x01);							   
+	LCD_cmd(0x01);			           // For clearing LCD display screen				   
  194:	81 e0       	ldi	r24, 0x01	; 1
  196:	0e 94 b5 00 	call	0x16a	; 0x16a <LCD_cmd>
  19a:	8f e9       	ldi	r24, 0x9F	; 159
@@ -275,7 +276,7 @@ void init_LCD(void)
  1a2:	00 c0       	rjmp	.+0      	; 0x1a4 <init_LCD+0x22>
  1a4:	00 00       	nop
 	_delay_ms(1);
-	LCD_cmd(0x02);
+	LCD_cmd(0x02);                     // return home
  1a6:	82 e0       	ldi	r24, 0x02	; 2
  1a8:	0e 94 b5 00 	call	0x16a	; 0x16a <LCD_cmd>
  1ac:	8f e9       	ldi	r24, 0x9F	; 159
@@ -285,7 +286,7 @@ void init_LCD(void)
  1b4:	00 c0       	rjmp	.+0      	; 0x1b6 <init_LCD+0x34>
  1b6:	00 00       	nop
 	_delay_ms(1);
-	LCD_cmd(0x06);
+	LCD_cmd(0x06);                     // make increment in cursor
  1b8:	86 e0       	ldi	r24, 0x06	; 6
  1ba:	0e 94 b5 00 	call	0x16a	; 0x16a <LCD_cmd>
  1be:	8f e9       	ldi	r24, 0x9F	; 159
@@ -295,7 +296,7 @@ void init_LCD(void)
  1c6:	00 c0       	rjmp	.+0      	; 0x1c8 <init_LCD+0x46>
  1c8:	00 00       	nop
 	_delay_ms(1);
-	LCD_cmd(0x80);
+	LCD_cmd(0x80);                     // go to the first line and 8th position   ( l2en al 3ad fe lcd bybd2 mn al 0 wana 3ndy 16 bit mn 0 l 15 )
  1ca:	80 e8       	ldi	r24, 0x80	; 128
  1cc:	0e 94 b5 00 	call	0x16a	; 0x16a <LCD_cmd>
  1d0:	8f e9       	ldi	r24, 0x9F	; 159
@@ -307,18 +308,18 @@ void init_LCD(void)
  1dc:	08 95       	ret
 
 000001de <LCD_write>:
-	
 }		
 
+    // write data on LCD //
 void LCD_write(unsigned char data)
 {
 	LCD_DATA = data;
  1de:	85 b9       	out	0x05, r24	; 5
-	PORTE |= (1<<rs);
+	PORTE |= (1<<rs);                // Rs sets 1
  1e0:	73 9a       	sbi	0x0e, 3	; 14
-	PORTE &= ~(1<<rw);
+	PORTE &= ~(1<<rw);               // Rw sets = 0
  1e2:	72 98       	cbi	0x0e, 2	; 14
-	PORTE |= (1<<en);
+	PORTE |= (1<<en);                 // make enable high
  1e4:	71 9a       	sbi	0x0e, 1	; 14
  1e6:	8f e3       	ldi	r24, 0x3F	; 63
  1e8:	9f e1       	ldi	r25, 0x1F	; 31
@@ -327,7 +328,7 @@ void LCD_write(unsigned char data)
  1ee:	00 c0       	rjmp	.+0      	; 0x1f0 <LCD_write+0x12>
  1f0:	00 00       	nop
 	_delay_ms(2);
-	PORTE &= ~(1<<en);
+	PORTE &= ~(1<<en);                // make enable from high to low
  1f2:	71 98       	cbi	0x0e, 1	; 14
  1f4:	08 95       	ret
 
@@ -345,19 +346,19 @@ int main(void)
  1fe:	cd b7       	in	r28, 0x3d	; 61
  200:	de b7       	in	r29, 0x3e	; 62
 	
-	DDRB=0xFF;
+	DDRB=0xFF;                      // set LCD data port as output
  202:	8f ef       	ldi	r24, 0xFF	; 255
  204:	84 b9       	out	0x04, r24	; 4
-	DDRE=0xFF;
+	DDRE=0xFF;                      // set LCD signals ( RS , RW , E ) as output
  206:	8d b9       	out	0x0d, r24	; 13
 	
 	
-	DDRD = 0b00111111;
+	DDRD = 0b00111111;              // set port D as input
  208:	9f e3       	ldi	r25, 0x3F	; 63
  20a:	9a b9       	out	0x0a, r25	; 10
-	PORTD = 0xFF;
+	PORTD = 0xFF;                   // enable pull up
  20c:	8b b9       	out	0x0b, r24	; 11
-	
+	// PORTD , PIND7
 	PCMSK3 |= (1 << PCINT9);
  20e:	e3 e7       	ldi	r30, 0x73	; 115
  210:	f0 e0       	ldi	r31, 0x00	; 0
@@ -371,22 +372,25 @@ int main(void)
  21e:	88 60       	ori	r24, 0x08	; 8
  220:	80 83       	st	Z, r24
 	
-	sei();
+	sei();                // initialize for global interrupt
  222:	78 94       	sei
 	
-	PWM_Init();
+	PWM_Init();          // initialize PWM
  224:	0e 94 aa 00 	call	0x154	; 0x154 <PWM_Init>
-	init_ADC();
+	init_ADC();          // init       ADC
  228:	0e 94 84 00 	call	0x108	; 0x108 <init_ADC>
-	init_LCD();
+	init_LCD();          // init       LCD
  22c:	0e 94 c1 00 	call	0x182	; 0x182 <init_LCD>
 	
-	OCR1A = 800;
+	// Freq = F_CPU / ( 2 * N * ( 1 * OCR1A )
+	// OCR1A = ( F_CPU / ( 2 * N * Freq ) - 1
+	
+	OCR1A = 800;          // ( pwm frequancy ) to control the freq 3la asas al equation aly fo2
  230:	80 e2       	ldi	r24, 0x20	; 32
  232:	93 e0       	ldi	r25, 0x03	; 3
  234:	90 93 89 00 	sts	0x0089, r25	; 0x800089 <__TEXT_REGION_LENGTH__+0x7e0089>
  238:	80 93 88 00 	sts	0x0088, r24	; 0x800088 <__TEXT_REGION_LENGTH__+0x7e0088>
-	OCR1B = 0;
+	OCR1B = 0;           // al resolution bta3t al duty cycle 10 bit pwm  3l4an ycontrol al duty cycle 0 to 1023
  23c:	10 92 8b 00 	sts	0x008B, r1	; 0x80008b <__TEXT_REGION_LENGTH__+0x7e008b>
  240:	10 92 8a 00 	sts	0x008A, r1	; 0x80008a <__TEXT_REGION_LENGTH__+0x7e008a>
  244:	2f ef       	ldi	r18, 0xFF	; 255
@@ -415,13 +419,13 @@ int main(void)
  26c:	00 00       	nop
 	_delay_ms(100);
 	
-	LCD_cmd(0x01);
+	LCD_cmd(0x01);          // Clear LCD display screen
  26e:	81 e0       	ldi	r24, 0x01	; 1
  270:	0e 94 b5 00 	call	0x16a	; 0x16a <LCD_cmd>
  
- // --------------------------------------------------------------//
+ // --------------------------------------------------------------// // ADC channel 0 //
  
-    LCD_write('A');
+    LCD_write('A');          // call a function to display "A" on LCD
  274:	81 e4       	ldi	r24, 0x41	; 65
  276:	0e 94 ef 00 	call	0x1de	; 0x1de <LCD_write>
  27a:	8f e9       	ldi	r24, 0x9F	; 159
@@ -431,7 +435,7 @@ int main(void)
  282:	00 c0       	rjmp	.+0      	; 0x284 <main+0x8e>
  284:	00 00       	nop
 	_delay_ms(1);
-    LCD_write('D');
+    LCD_write('D');         // call a function to display "D" on LCD
  286:	84 e4       	ldi	r24, 0x44	; 68
  288:	0e 94 ef 00 	call	0x1de	; 0x1de <LCD_write>
  28c:	ef e9       	ldi	r30, 0x9F	; 159
@@ -441,11 +445,11 @@ int main(void)
  294:	00 c0       	rjmp	.+0      	; 0x296 <main+0xa0>
  296:	00 00       	nop
     _delay_ms(1);
-    LCD_write('C');
+    LCD_write('C');          //   //   //        //      "C"    //
  298:	83 e4       	ldi	r24, 0x43	; 67
  29a:	0e 94 ef 00 	call	0x1de	; 0x1de <LCD_write>
     _delay_ms(0);
-    LCD_write('0');
+    LCD_write('0');          //   //    //     //    //  "0"  //
  29e:	80 e3       	ldi	r24, 0x30	; 48
  2a0:	0e 94 ef 00 	call	0x1de	; 0x1de <LCD_write>
  2a4:	8f e9       	ldi	r24, 0x9F	; 159
@@ -455,7 +459,7 @@ int main(void)
  2ac:	00 c0       	rjmp	.+0      	; 0x2ae <main+0xb8>
  2ae:	00 00       	nop
     _delay_ms(1);
-	LCD_write(' ');
+	LCD_write(' ');          //        //     //      //   " "  //
  2b0:	80 e2       	ldi	r24, 0x20	; 32
  2b2:	0e 94 ef 00 	call	0x1de	; 0x1de <LCD_write>
  2b6:	ef e9       	ldi	r30, 0x9F	; 159
@@ -465,11 +469,11 @@ int main(void)
  2be:	00 c0       	rjmp	.+0      	; 0x2c0 <main+0xca>
  2c0:	00 00       	nop
 	_delay_ms(1);
-	LCD_write('=');
+	LCD_write('=');            //     //       //     //   "="   /
  2c2:	8d e3       	ldi	r24, 0x3D	; 61
  2c4:	0e 94 ef 00 	call	0x1de	; 0x1de <LCD_write>
 	
-	LCD_cmd(0xC0);
+	LCD_cmd(0xC0);             // move cursor to the start of 2nd line
  2c8:	80 ec       	ldi	r24, 0xC0	; 192
  2ca:	0e 94 b5 00 	call	0x16a	; 0x16a <LCD_cmd>
  2ce:	8f e9       	ldi	r24, 0x9F	; 159
@@ -479,7 +483,7 @@ int main(void)
  2d6:	00 c0       	rjmp	.+0      	; 0x2d8 <main+0xe2>
  2d8:	00 00       	nop
 	_delay_ms(1);
-	LCD_cmd(0x0C);
+	LCD_cmd(0x0C);             // display one , cursor off
  2da:	8c e0       	ldi	r24, 0x0C	; 12
  2dc:	0e 94 b5 00 	call	0x16a	; 0x16a <LCD_cmd>
  2e0:	ef e9       	ldi	r30, 0x9F	; 159
@@ -490,7 +494,7 @@ int main(void)
  2ea:	00 00       	nop
 	_delay_ms(1);
 	
-	LCD_write(' ');
+	LCD_write(' ');              // call a function to display " " on LCD
  2ec:	80 e2       	ldi	r24, 0x20	; 32
  2ee:	0e 94 ef 00 	call	0x1de	; 0x1de <LCD_write>
  2f2:	8f e9       	ldi	r24, 0x9F	; 159
@@ -500,7 +504,7 @@ int main(void)
  2fa:	00 c0       	rjmp	.+0      	; 0x2fc <main+0x106>
  2fc:	00 00       	nop
 	_delay_ms(1);
-	LCD_write(' ');
+	LCD_write(' ');              // call a function to display " " on LCD
  2fe:	80 e2       	ldi	r24, 0x20	; 32
  300:	0e 94 ef 00 	call	0x1de	; 0x1de <LCD_write>
  304:	ef e9       	ldi	r30, 0x9F	; 159
@@ -510,8 +514,8 @@ int main(void)
  30c:	00 c0       	rjmp	.+0      	; 0x30e <main+0x118>
  30e:	00 00       	nop
 	_delay_ms(1);
-	LCD_write('H');
- 310:	88 e4       	ldi	r24, 0x48	; 72
+	LCD_write('A');             // call a function to display "A" on LCD
+ 310:	81 e4       	ldi	r24, 0x41	; 65
  312:	0e 94 ef 00 	call	0x1de	; 0x1de <LCD_write>
  316:	8f e9       	ldi	r24, 0x9F	; 159
  318:	9f e0       	ldi	r25, 0x0F	; 15
@@ -520,8 +524,8 @@ int main(void)
  31e:	00 c0       	rjmp	.+0      	; 0x320 <main+0x12a>
  320:	00 00       	nop
 	_delay_ms(1);
-	LCD_write('a');
- 322:	81 e6       	ldi	r24, 0x61	; 97
+	LCD_write('h');             // call a function to display "h" on LCD
+ 322:	88 e6       	ldi	r24, 0x68	; 104
  324:	0e 94 ef 00 	call	0x1de	; 0x1de <LCD_write>
  328:	ef e9       	ldi	r30, 0x9F	; 159
  32a:	ff e0       	ldi	r31, 0x0F	; 15
@@ -530,8 +534,8 @@ int main(void)
  330:	00 c0       	rjmp	.+0      	; 0x332 <main+0x13c>
  332:	00 00       	nop
 	_delay_ms(1);
-	LCD_write('s');
- 334:	83 e7       	ldi	r24, 0x73	; 115
+	LCD_write('m');             // call a function to display "m" on LCD
+ 334:	8d e6       	ldi	r24, 0x6D	; 109
  336:	0e 94 ef 00 	call	0x1de	; 0x1de <LCD_write>
  33a:	8f e9       	ldi	r24, 0x9F	; 159
  33c:	9f e0       	ldi	r25, 0x0F	; 15
@@ -540,8 +544,8 @@ int main(void)
  342:	00 c0       	rjmp	.+0      	; 0x344 <main+0x14e>
  344:	00 00       	nop
 	_delay_ms(1);
-	LCD_write('h');
- 346:	88 e6       	ldi	r24, 0x68	; 104
+	LCD_write('e');              // call a function to display "e" on LCD
+ 346:	85 e6       	ldi	r24, 0x65	; 101
  348:	0e 94 ef 00 	call	0x1de	; 0x1de <LCD_write>
  34c:	ef e9       	ldi	r30, 0x9F	; 159
  34e:	ff e0       	ldi	r31, 0x0F	; 15
@@ -550,8 +554,8 @@ int main(void)
  354:	00 c0       	rjmp	.+0      	; 0x356 <main+0x160>
  356:	00 00       	nop
 	_delay_ms(1);
-	LCD_write('i');
- 358:	89 e6       	ldi	r24, 0x69	; 105
+	LCD_write('e');               // call a function to display "e" on LCD
+ 358:	85 e6       	ldi	r24, 0x65	; 101
  35a:	0e 94 ef 00 	call	0x1de	; 0x1de <LCD_write>
  35e:	8f e9       	ldi	r24, 0x9F	; 159
  360:	9f e0       	ldi	r25, 0x0F	; 15
@@ -560,8 +564,8 @@ int main(void)
  366:	00 c0       	rjmp	.+0      	; 0x368 <main+0x172>
  368:	00 00       	nop
 	_delay_ms(1);
-	LCD_write('=');
- 36a:	8d e3       	ldi	r24, 0x3D	; 61
+	LCD_write('d');                // call a function to display "d" on LCD
+ 36a:	84 e6       	ldi	r24, 0x64	; 100
  36c:	0e 94 ef 00 	call	0x1de	; 0x1de <LCD_write>
  370:	ef e9       	ldi	r30, 0x9F	; 159
  372:	ff e0       	ldi	r31, 0x0F	; 15
@@ -583,8 +587,8 @@ int main(void)
 	while (1)
 	{
 		// writing data on the first row // 
-		Data_final = ADC_read(0);
-		OCR1B = ADC_read(0);
+		Data_final = ADC_read(0);        // store the ADC value into a variable
+		OCR1B = ADC_read(0);              // write ADC to the PWM channel
  388:	0f 2e       	mov	r0, r31
  38a:	fa e8       	ldi	r31, 0x8A	; 138
  38c:	af 2e       	mov	r10, r31
@@ -607,12 +611,12 @@ int main(void)
 	while (1)
 	{
 		// writing data on the first row // 
-		Data_final = ADC_read(0);
+		Data_final = ADC_read(0);        // store the ADC value into a variable
  3a0:	80 e0       	ldi	r24, 0x00	; 0
  3a2:	90 e0       	ldi	r25, 0x00	; 0
  3a4:	0e 94 95 00 	call	0x12a	; 0x12a <ADC_read>
  3a8:	8c 01       	movw	r16, r24
-		OCR1B = ADC_read(0);
+		OCR1B = ADC_read(0);              // write ADC to the PWM channel
  3aa:	80 e0       	ldi	r24, 0x00	; 0
  3ac:	90 e0       	ldi	r25, 0x00	; 0
  3ae:	0e 94 95 00 	call	0x12a	; 0x12a <ADC_read>
@@ -640,8 +644,8 @@ int main(void)
 		}
 		// writing the data onn the first row//
 		
-		Cursor_pos(0, 8);
-		itoa(Data_final,ch, 10);
+		Cursor_pos(0, 8);                     // Start from row first row 8 column
+		itoa(Data_final,ch, 10);              // integer to ASCII     -     10 is for decimal ,  replace by 16 for hexadecimal
  3c6:	4a e0       	ldi	r20, 0x0A	; 10
  3c8:	50 e0       	ldi	r21, 0x00	; 0
  3ca:	be 01       	movw	r22, r28
@@ -672,8 +676,8 @@ int main(void)
 		}
 		// writing the data onn the first row//
 		
-		Cursor_pos(0, 8);
-		itoa(Data_final,ch, 10);
+		Cursor_pos(0, 8);                     // Start from row first row 8 column
+		itoa(Data_final,ch, 10);              // integer to ASCII     -     10 is for decimal ,  replace by 16 for hexadecimal
 		for (int j = 0; j<4;j++)
  3f6:	c0 16       	cp	r12, r16
  3f8:	d1 06       	cpc	r13, r17

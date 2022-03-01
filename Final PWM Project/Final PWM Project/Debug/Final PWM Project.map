@@ -445,20 +445,20 @@ END GROUP
  .debug_abbrev  0x00000000      0x86e C:/Program Files (x86)/Atmel/Studio/7.0/Packs/atmel/ATmega_DFP/1.2.209/gcc/dev/atmega328pb/avr5/crtatmega328pb.o
  .debug_abbrev  0x0000086e      0x241 main.o
 
-.debug_line     0x00000000      0x630
+.debug_line     0x00000000      0x62b
  *(.debug_line .debug_line.* .debug_line_end)
  .debug_line    0x00000000      0x1a5 C:/Program Files (x86)/Atmel/Studio/7.0/Packs/atmel/ATmega_DFP/1.2.209/gcc/dev/atmega328pb/avr5/crtatmega328pb.o
- .debug_line    0x000001a5      0x48b main.o
+ .debug_line    0x000001a5      0x486 main.o
 
 .debug_frame    0x00000000       0xd0
  *(.debug_frame)
  .debug_frame   0x00000000       0xd0 main.o
 
-.debug_str      0x00000000      0x523
+.debug_str      0x00000000      0x531
  *(.debug_str)
  .debug_str     0x00000000      0x318 C:/Program Files (x86)/Atmel/Studio/7.0/Packs/atmel/ATmega_DFP/1.2.209/gcc/dev/atmega328pb/avr5/crtatmega328pb.o
- .debug_str     0x00000318      0x20b main.o
-                                0x23f (size before relaxing)
+ .debug_str     0x00000318      0x219 main.o
+                                0x24d (size before relaxing)
 
 .debug_loc      0x00000000      0x911
  *(.debug_loc)
